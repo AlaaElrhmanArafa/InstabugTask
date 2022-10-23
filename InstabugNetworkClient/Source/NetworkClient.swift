@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 public class NetworkClient {
     public static var shared = NetworkClient()
@@ -16,7 +17,7 @@ public class NetworkClient {
     }
 
     public func post(_ url: URL, payload: Data?=nil, completionHandler: @escaping (Data?) -> Void) {
-        executeRequest(url, method: "POSt", payload: payload, completionHandler: completionHandler)
+        executeRequest(url, method: "POST", payload: payload, completionHandler: completionHandler)
     }
 
     public func put(_ url: URL, payload: Data?=nil, completionHandler: @escaping (Data?) -> Void) {
@@ -32,18 +33,27 @@ public class NetworkClient {
         urlRequest.httpMethod = method
         urlRequest.httpBody = payload
         URLSession.shared.dataTask(with: urlRequest) { data, response, error in
-            #warning("Record request/response")
-            fatalError("Not implemented")
-        
+
+            guard let httpURLResponse = response as? HTTPURLResponse else {
+                completionHandler(nil)
+                return
+            }
+            
+            LoggerHandler.shared.saveRequestAndResponse(url: url.absoluteString,
+                                                       statusCode: httpURLResponse.statusCode,
+                                                       requestPayload: payload,
+                                                       responsePayload: data,
+                                                       error: error)
+            
             DispatchQueue.main.async {
                 completionHandler(data)
             }
+            return
         }.resume()
     }
 
     // MARK: Network recording
-    #warning("Replace Any with an appropriate type")
-    public func allNetworkRequests() -> Any {
-        fatalError("Not implemented")
+    public func allNetworkRequests() -> [LoggerModel] {
+        return LoggerHandler.shared.allNetworkRequests()
     }
 }

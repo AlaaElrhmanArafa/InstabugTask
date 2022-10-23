@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21279" systemVersion="22A5342f" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="ErrorModel" representedClassName="ErrorModel" syncable="YES" codeGenerationType="class">
+        <attribute name="domain" optional="YES" attributeType="String"/>
+        <attribute name="errorCode" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="LoggerModel" inverseName="error" inverseEntity="LoggerModel"/>
+    </entity>
+    <entity name="LoggerModel" representedClassName="LoggerModel" syncable="YES" codeGenerationType="class">
+        <attribute name="method" optional="YES" attributeType="String"/>
+        <attribute name="requestPayload" optional="YES" attributeType="Binary"/>
+        <attribute name="statusCode" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+        <relationship name="error" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ErrorModel" inverseName="log" inverseEntity="ErrorModel"/>
+        <relationship name="response" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ResponseModel" inverseName="log" inverseEntity="ResponseModel"/>
+    </entity>
+    <entity name="ResponseModel" representedClassName="ResponseModel" syncable="YES" codeGenerationType="class">
+        <attribute name="response" optional="YES" attributeType="Binary"/>
+        <relationship name="log" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="LoggerModel" inverseName="response" inverseEntity="LoggerModel"/>
+    </entity>
+</model>
