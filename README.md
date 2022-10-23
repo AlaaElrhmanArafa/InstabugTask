@@ -5,7 +5,7 @@ This Framework to record all requests and responses and simple app as a POC
 
 
 ## Documentation
-###The module has a LoggerHandler singleton class as an entry point to logging framework
+### The module has a LoggerHandler singleton class as an entry point to logging framework
     the limition for saving exists in Handler 
     
 The logger accessible functions other targets
@@ -14,7 +14,7 @@ The logger accessible functions other targets
     - count
  
 LoggerHandler interact with DB Manager using one interface
-,,, swift
+``` swift
     protocol RecieveRequestProtocol{
         func saveRequest(url:String,
                          statusCode:Int,
@@ -27,7 +27,7 @@ LoggerHandler interact with DB Manager using one interface
         func clearLogs()
         var  count: Int { get }
     }
-,,,
+```
 
 ### CoreDataManager is the DB Manager of the app, 
     it has the core data main functionalities
