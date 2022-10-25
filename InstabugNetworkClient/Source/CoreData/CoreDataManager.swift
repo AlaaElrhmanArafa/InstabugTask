@@ -30,13 +30,6 @@ import CoreData
         return container
     }()
     
-    lazy var backgroundManagedContext: NSManagedObjectContext = {
-        let context = self.persistentContainer.newBackgroundContext()
-        context.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
-        return context
-    }()
-    
-    
     lazy var mainManagedContext: NSManagedObjectContext = {
         let context = self.persistentContainer.viewContext
         context.automaticallyMergesChangesFromParent = true
@@ -59,15 +52,16 @@ extension CoreDataManager{
 extension CoreDataManager{
     /// delete all BD Rows
     public func clearLogs() {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: logEntity)
-        let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-        
-        backgroundManagedContext.performAndWait {
-            do{
-                _ = try backgroundManagedContext.execute(deleteRequest)
-                _ = try backgroundManagedContext.save()
-            }catch{
-                fatalError("error in clearLogs at coreData:\(error.localizedDescription)")
+        persistentContainer.performBackgroundTask { backgroundManagedContext in
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.logEntity)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            backgroundManagedContext.performAndWait {
+                do{
+                    _ = try backgroundManagedContext.execute(deleteRequest)
+                    _ = try backgroundManagedContext.save()
+                }catch{
+                    fatalError("error in clearLogs at coreData:\(error.localizedDescription)")
+                }
             }
         }
     }
@@ -78,13 +72,15 @@ extension CoreDataManager{
     ///   - allLogs: All Rows
     private func deleteLog(at index: Int, allLogs: [LoggerModel]) {
         let objectID = allLogs[index].objectID
-        backgroundManagedContext.performAndWait {
-            if let managedObject = try? backgroundManagedContext.existingObject(with: objectID) {
-                do{
-                    backgroundManagedContext.delete(managedObject)
-                    try backgroundManagedContext.save()
-                }catch{
-                    fatalError("error in deleteLog at coreData:\(error.localizedDescription)")
+        persistentContainer.performBackgroundTask{ backgroundManagedContext in
+            backgroundManagedContext.performAndWait {
+                if let managedObject = try? backgroundManagedContext.existingObject(with: objectID) {
+                    do{
+                        backgroundManagedContext.delete(managedObject)
+                        try backgroundManagedContext.save()
+                    }catch{
+                        fatalError("error in deleteLog at coreData:\(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -123,47 +119,48 @@ extension CoreDataManager: RecieveRequestProtocol{
     ///   - error: Error, error if happened (Optional)
     func saveRequest(url: String, statusCode: Int, requestPayload: Data?, responsePayload: Data?, error: Error?) {
                 
-        let log = LoggerModel(context: backgroundManagedContext)
-        
-        log.urlString = url
-        log.statusCode = Int64(statusCode)
-        log.requestPayload = requestPayload
-        
-        if let error = error as? NSError{
-            log.errorData = getErrorModel(error: error)
+        persistentContainer.performBackgroundTask { backgroundManagedContext in
+            let log = LoggerModel(context: backgroundManagedContext)
+            
+            log.urlString = url
+            log.statusCode = Int64(statusCode)
+            log.requestPayload = requestPayload
+            
+            if let error = error as? NSError{
+                log.errorData = self.getErrorModel(error: error, context: backgroundManagedContext)
+            }
+            
+            if let responsePayload = responsePayload{
+                log.responseData = self.getResponseModel(response: responsePayload, context: backgroundManagedContext)
+            }
+            
+            backgroundManagedContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+            backgroundManagedContext.insert(log)
+            do{
+                try backgroundManagedContext.save()
+            }catch let error{
+                fatalError("error in save at coreData: \(error.localizedDescription)")
+            }
         }
-        
-        if let responsePayload = responsePayload{
-            log.responseData = getResponseModel(response: responsePayload)
-        }
-        
-        backgroundManagedContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        backgroundManagedContext.insert(log)
-        do{
-            try backgroundManagedContext.save()
-        }catch let error{
-            fatalError("error in save at coreData: \(error.localizedDescription)")
-        }
+
     }
     
     /// count of items in DB
     var count: Int{
-        let fetchRequest = NSFetchRequest<LoggerModel>(entityName: logEntity)
-        do{
-            let items = try? mainManagedContext.fetch(fetchRequest)
-            return items?.count ?? 0
-        }
+        return fetchLogs().count
     }
     
     /// Delete at Index from CoreData
     /// - Parameter index: The index of deleted row
     func delete(at index: Int) {
-        let fetchRequest = NSFetchRequest<LoggerModel>(entityName: logEntity)
-        do{
-            let allLogs = try mainManagedContext.fetch(fetchRequest)
-            deleteLog(at: index, allLogs: allLogs)
-        }catch let error{
-            fatalError("Error in deleting item at Index:\(index) from coreData \(error)")
+        persistentContainer.performBackgroundTask{ backgroundManagedContext in
+            let fetchRequest = NSFetchRequest<LoggerModel>(entityName: self.logEntity)
+            do{
+                let allLogs = try backgroundManagedContext.fetch(fetchRequest)
+                self.deleteLog(at: index, allLogs: allLogs)
+            }catch let error{
+                fatalError("Error in deleting item at Index:\(index) from coreData \(error)")
+            }
         }
     }
 }
@@ -171,9 +168,9 @@ extension CoreDataManager{
     /// create Error Model if exist
     /// - Parameter error: error as Error
     /// - Returns: Error Model in CoreData
-    func getErrorModel(error:Error) -> ErrorModel{
+    func getErrorModel(error:Error, context:NSManagedObjectContext) -> ErrorModel{
         let error = error as NSError
-        let errorModel = ErrorModel(context: backgroundManagedContext)
+        let errorModel = ErrorModel(context: context)
         errorModel.domainError = error.domain
         errorModel.errorCode = Int64(error.code)
         
@@ -183,8 +180,8 @@ extension CoreDataManager{
     /// create ResponseModel in CoreData
     /// - Parameter response: responseData
     /// - Returns: ResponseModel
-    func getResponseModel(response:Data) -> ResponseModel{
-        let responseModel = ResponseModel(context: backgroundManagedContext)
+    func getResponseModel(response:Data, context:NSManagedObjectContext) -> ResponseModel{
+        let responseModel = ResponseModel(context: context)
         responseModel.responsePayload = response
         
         return responseModel

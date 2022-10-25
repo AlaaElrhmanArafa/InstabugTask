@@ -76,16 +76,24 @@
                                     </button>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="moj-mS-hYd">
+                                <rect key="frame" x="185" y="412" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
+                            <constraint firstItem="moj-mS-hYd" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="KO7-zH-zXo"/>
+                            <constraint firstItem="moj-mS-hYd" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="PqU-hE-76d"/>
                             <constraint firstItem="nG8-Ys-QeC" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="iPA-N3-yst"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="nG8-Ys-QeC" secondAttribute="trailing" constant="10" id="orM-Gy-RSI"/>
                             <constraint firstItem="nG8-Ys-QeC" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="tBE-HA-p10"/>
                             <constraint firstItem="nG8-Ys-QeC" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="ziV-Xv-4iX"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="activityIndicator" destination="moj-mS-hYd" id="Rxz-6W-WAs"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>

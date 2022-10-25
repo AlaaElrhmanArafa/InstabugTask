@@ -10,7 +10,9 @@ import InstabugNetworkClient
 
 class HomeViewController: UIViewController {
 
-    //MARK: - 
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    
+    //MARK: -
     var viewModel = HomeViewModel()
     
     //
@@ -24,6 +26,16 @@ class HomeViewController: UIViewController {
         viewModel.showAlertClosure = { [weak self] (msg) in
             DispatchQueue.main.async {
                 self?.alert(message: msg)
+            }
+        }
+        
+        viewModel.showActivityIndiactor = { [weak self] (isLoading) in
+            DispatchQueue.main.async {
+                if isLoading{
+                    self?.activityIndicator.startAnimating()
+                }else{
+                    self?.activityIndicator.stopAnimating()
+                }
             }
         }
     }
